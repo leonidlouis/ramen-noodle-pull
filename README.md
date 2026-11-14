@@ -1,7 +1,7 @@
 # Tonkotsu ramen — make.fun food-picture-01 entry
 
 An entry for make.fun's **food-picture-01** contest ("make the best-looking food picture").
-The picture is `assets/ramen.jpg`: a warm, lantern-lit 1024×1024 photo of a bowl of tonkotsu ramen on a wooden izakaya table, with a steaming noodle pull, chashu, a soft-boiled egg and chili oil.
+The picture is `assets/ramen.jpg`: a warm, eye-level 1024×1024 ramen-bar photo of tonkotsu ramen with a steaming noodle pull, six fanned chashu slices and two oozing egg halves, with a blurred chef and lanterns behind.
 
 `main.py` (Python 3.13, standard library only) checks the image and then writes it, byte for byte,
 to `<output>/entry.png`. The contest identifies the format from the first bytes, so JPEG content
