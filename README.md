@@ -9,9 +9,12 @@ under the name `entry.png` is allowed. Before writing, the program checks that t
 
 - starts with a JPEG or PNG signature,
 - is at most 1 MiB,
-- is at most 1024×1024 pixels (read from the JPEG SOF segment or the PNG IHDR chunk).
+- is at most 1024×1024 pixels, and not 0 in either dimension (read from the JPEG SOF segment or the PNG IHDR chunk),
+- is a whole image: for a JPEG, every segment and the scan data run through to the end-of-image
+  marker with nothing after it; for a PNG, every chunk has a valid CRC, from IHDR through IEND.
 
-If any check fails, it exits non-zero with a message and writes nothing. The output is
+The output is written to a temporary file and then renamed, so there is never a partial
+`entry.png`. If any check fails, it exits non-zero with a message and writes nothing. The output is
 deterministic: every run writes the same bytes.
 
 ## Run

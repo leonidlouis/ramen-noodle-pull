@@ -86,6 +86,27 @@ class Validate(unittest.TestCase):
         with self.assertRaises(main.InvalidImage):
             main.validate(make_jpeg(8, 8)[:12])
 
+    def test_real_photo_cut_short_refused(self):
+        data = main.SOURCE.read_bytes()
+        with self.assertRaisesRegex(main.InvalidImage, "end-of-image"):
+            main.validate(data[: len(data) // 2])
+
+    def test_trailing_bytes_refused(self):
+        with self.assertRaisesRegex(main.InvalidImage, "after the end-of-image"):
+            main.validate(make_jpeg(8, 8) + b"junk")
+        with self.assertRaisesRegex(main.InvalidImage, "after IEND"):
+            main.validate(make_png(2, 2) + b"junk")
+
+    def test_png_bad_crc_refused(self):
+        data = bytearray(make_png(2, 2))
+        data[-5] ^= 0xFF  # corrupt IEND's CRC
+        with self.assertRaisesRegex(main.InvalidImage, "bad CRC"):
+            main.validate(bytes(data))
+
+    def test_zero_dimension_refused(self):
+        with self.assertRaisesRegex(main.InvalidImage, "empty"):
+            main.validate(make_jpeg(0, 10))
+
 
 class BadFileRefused(unittest.TestCase):
     def test_bad_file_exits_nonzero_and_writes_nothing(self):
@@ -105,6 +126,19 @@ class BadFileRefused(unittest.TestCase):
             r = run_main(Path(d) / "out", str(bad))
             self.assertNotEqual(r.returncode, 0)
             self.assertIn("2048x2048", r.stderr)
+
+    def test_missing_source_exits_nonzero(self):
+        with tempfile.TemporaryDirectory() as d:
+            r = run_main(Path(d) / "out", str(Path(d) / "nope.jpg"))
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("cannot read", r.stderr)
+            self.assertNotIn("Traceback", r.stderr)
+
+    def test_output_dir_holds_only_entry_png(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(run_main(d).returncode, 0)
+            self.assertEqual(os.listdir(d), ["entry.png"])
+            self.assertEqual(os.stat(Path(d) / "entry.png").st_mode & 0o777, 0o644)
 
 
 if __name__ == "__main__":
